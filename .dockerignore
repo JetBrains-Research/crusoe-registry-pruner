@@ -1,0 +1,7 @@
+.claude
+.git*
+.env*
+.idea
+chart
+LICENSE*
+README*

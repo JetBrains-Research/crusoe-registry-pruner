@@ -1,0 +1,46 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "crusoe-registry-pruner.name" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "crusoe-registry-pruner.labels" . | nindent 4 }}
+spec:
+  concurrencyPolicy: {{ .Values.concurrencyPolicy }}
+  successfulJobsHistoryLimit: {{ .Values.historyLimits.successful }}
+  failedJobsHistoryLimit: {{ .Values.historyLimits.failed }}
+  schedule: {{ .Values.schedule }}
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          annotations:
+            checksum/config: {{ include (print $.Template.BasePath "/configmaps.yaml") . | sha256sum }}
+        spec:
+          restartPolicy: {{ .Values.restartPolicy }}
+          {{- with .Values.imagePullSecrets }}
+          imagePullSecrets:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          containers:
+            - name: pruner
+              image: {{ include "crusoe-registry-pruner.image" . }}
+              imagePullPolicy: {{ .Values.image.pullPolicy }}
+              envFrom:
+                - secretRef:
+                    name: {{ .Values.secretName }}
+                - configMapRef:
+                    name: {{ include "crusoe-registry-pruner.name" . }}
+                  prefix: "CRUSOE_PRUNER_"
+              {{- with .Values.extraEnv }}
+              env:
+                {{- toYaml . | nindent 16 }}
+              {{- end }}
+              {{- with .Values.resources }}
+              resources:
+                {{- toYaml . | nindent 16 }}
+              {{- end }}
+              {{- with .Values.securityContext }}
+              securityContext:
+                {{- toYaml . | nindent 16 }}
+              {{- end }}

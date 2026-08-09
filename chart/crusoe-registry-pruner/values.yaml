@@ -1,0 +1,43 @@
+config:
+  ageFrom: ""
+  deleteImages: false
+  dryRun: false
+  keepTagPrefixes: []
+  maxAge: ""
+  tagState: ""
+  timeout: ""
+
+concurrencyPolicy: "Forbid"
+extraEnv: []
+
+historyLimits:
+  failed: 3
+  successful: 3
+
+imagePullSecrets: []
+
+image:
+  pullPolicy: "IfNotPresent"
+  repository: "ghcr.io/jetbrains-research/crusoe-registry-pruner"
+  tag: ""
+
+log:
+  format: "json"
+  level: "info"
+  source: false
+
+resources:
+  requests:
+    cpu: "50m"
+    memory: "32Mi"
+  limits:
+    memory: "64Mi"
+
+restartPolicy: "Never"
+schedule: "0 0 * * *"
+secretName: "crusoe-secrets"
+securityContext:
+  capabilities:
+    drop:
+      - ALL
+  runAsNonRoot: true

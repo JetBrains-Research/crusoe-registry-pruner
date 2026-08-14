@@ -4,6 +4,7 @@ import (
 	"cmp"
 	"context"
 	"crusoe-registry-pruner/internal/crusoe/config"
+	"errors"
 	"fmt"
 	"io"
 	"log/slog"
@@ -30,7 +31,7 @@ func NewClient(
 	logger *slog.Logger,
 ) (*Client, error) {
 	if cfg == nil {
-		return nil, fmt.Errorf("config is nil")
+		return nil, errors.New("config is nil")
 	}
 
 	return &Client{

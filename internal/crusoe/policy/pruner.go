@@ -15,10 +15,10 @@ func ShouldPrune(
 	now time.Time,
 ) bool {
 	for _, tag := range manifest.Tags {
-		for _, prefix := range pruner.KeepTagPrefixes {
-			if strings.HasPrefix(tag, prefix) {
-				return false
-			}
+		if slices.ContainsFunc(pruner.KeepTagPrefixes, func(prefix string) bool {
+			return strings.HasPrefix(tag, prefix)
+		}) {
+			return false
 		}
 	}
 

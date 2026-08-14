@@ -66,16 +66,14 @@ func (tagState *TagState) UnmarshalText(text []byte) error {
 type TagPrefixes []string
 
 func (tagPrefixes *TagPrefixes) UnmarshalText(text []byte) error {
-	raw := strings.Split(string(text), ",")
-	for idx := range raw {
-		raw[idx] = strings.TrimSpace(raw[idx])
+	prefixes := TagPrefixes{}
+	for raw := range strings.SplitSeq(string(text), ",") {
+		if prefix := strings.TrimSpace(raw); prefix != "" {
+			prefixes = append(prefixes, prefix)
+		}
 	}
 
-	raw = slices.DeleteFunc(raw, func(item string) bool {
-		return item == ""
-	})
-
-	slices.Sort(raw)
-	*tagPrefixes = slices.Compact(raw)
+	slices.Sort(prefixes)
+	*tagPrefixes = slices.Compact(prefixes)
 	return nil
 }

@@ -1,6 +1,7 @@
 package crusoe
 
 import (
+	"cmp"
 	"context"
 	"crusoe-registry-pruner/internal/crusoe/config"
 	"fmt"
@@ -32,14 +33,10 @@ func NewClient(
 		return nil, fmt.Errorf("config is nil")
 	}
 
-	if logger == nil {
-		logger = slog.Default()
-	}
-
 	return &Client{
-		logger:  logger,
 		dryRun:  cfg.Pruner.DryRun,
 		project: cfg.ProjectId.String(),
+		logger:  cmp.Or(logger, slog.Default()),
 		apiClient: auth.NewAuthenticatedAPIClient(
 			string(cfg.AccessKey),
 			string(cfg.SecretKey),

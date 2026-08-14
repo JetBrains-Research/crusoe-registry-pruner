@@ -36,7 +36,7 @@ func PruneCcr() error {
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
-	ctx, cancel := context.WithTimeout(ctx, cfg.Pruner.Timeout)
+	ctx, cancel := context.WithTimeoutCause(ctx, cfg.Pruner.Timeout, errors.New("timeout exceeded"))
 	defer cancel()
 
 	client, err := NewClient(cfg, logger)
@@ -59,8 +59,7 @@ func PruneCcr() error {
 	}
 
 	for _, repository := range repositories {
-		err := ctx.Err()
-		if err != nil {
+		if err := context.Cause(ctx); err != nil {
 			return err
 		}
 
@@ -73,8 +72,7 @@ func PruneCcr() error {
 		}
 
 		for _, image := range images {
-			err := ctx.Err()
-			if err != nil {
+			if err := context.Cause(ctx); err != nil {
 				return err
 			}
 
@@ -88,8 +86,7 @@ func PruneCcr() error {
 
 			deleted := 0
 			for _, manifest := range manifests {
-				err := ctx.Err()
-				if err != nil {
+				if err := context.Cause(ctx); err != nil {
 					return err
 				}
 

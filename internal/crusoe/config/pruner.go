@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/caarlos0/env/v11"
-	"github.com/google/uuid"
 )
 
 type Log struct {
@@ -26,10 +25,10 @@ type Pruner struct {
 }
 
 type Crusoe struct {
-	ProjectId uuid.UUID `env:"PROJECT_ID,required"`
-	AccessKey Secret    `env:"ACCESS_KEY,required"`
-	SecretKey Secret    `env:"SECRET_KEY,required"`
-	Pruner    Pruner    `envPrefix:"PRUNER_"`
+	ProjectId ID     `env:"PROJECT_ID,required"`
+	AccessKey Secret `env:"ACCESS_KEY,required"`
+	SecretKey Secret `env:"SECRET_KEY,required"`
+	Pruner    Pruner `envPrefix:"PRUNER_"`
 }
 
 func Load() (*Crusoe, error) {

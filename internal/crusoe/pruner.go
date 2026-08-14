@@ -52,7 +52,7 @@ func PruneCcr() error {
 		slog.Info("dry run mode enabled")
 	}
 
-	slog.Info("starting cleanup", "project", cfg.ProjectId.String())
+	slog.Info("starting cleanup", "project", cfg.ProjectId)
 	repositories, err := client.GetRepositories(ctx)
 	if err != nil {
 		return err

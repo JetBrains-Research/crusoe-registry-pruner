@@ -25,9 +25,9 @@ type Pruner struct {
 }
 
 type Crusoe struct {
-	ProjectId ID     `env:"PROJECT_ID,required"`
-	AccessKey Secret `env:"ACCESS_KEY,required"`
-	SecretKey Secret `env:"SECRET_KEY,required"`
+	ProjectId ID     `env:"PROJECT_ID,required,notEmpty"`
+	AccessKey Secret `env:"ACCESS_KEY,required,notEmpty"`
+	SecretKey Secret `env:"SECRET_KEY,required,notEmpty"`
 	Pruner    Pruner `envPrefix:"PRUNER_"`
 }
 

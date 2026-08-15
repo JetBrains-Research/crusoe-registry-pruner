@@ -16,13 +16,13 @@ RUN --mount=type=cache,target=/go/pkg/mod \
 
 COPY . .
 
-RUN go vet -v ./...
-
 RUN --mount=type=cache,target=/go/pkg/mod \
     --mount=type=cache,target=/root/.cache/go-build \
+    set -eu; \
+    go vet -v ./...; \
     go build -ldflags="-w -s -X crusoe-registry-pruner/internal/crusoe/utils.Version=${VERSION}" \
         -trimpath \
-        -o /go/bin/crusoe-registry-pruner
+        -o /go/bin/crusoe-registry-pruner;
 
 FROM gcr.io/distroless/static-debian13:nonroot-165b5d63ce3528e18115acf8191122537154f238
 

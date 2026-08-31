@@ -14,14 +14,15 @@ type Log struct {
 }
 
 type Pruner struct {
-	Timeout         time.Duration `env:"TIMEOUT" envDefault:"30m"`
-	MaxAge          time.Duration `env:"MAX_AGE" envDefault:"720h"`
-	AgeFrom         AgeFrom       `env:"AGE_FROM" envDefault:"pushed"`
-	TagState        TagState      `env:"TAG_STATE" envDefault:"any"`
-	KeepTagPrefixes TagPrefixes   `env:"KEEP_TAG_PREFIXES" envDefault:""`
-	DeleteImages    bool          `env:"DELETE_IMAGES" envDefault:"false"`
-	DryRun          bool          `env:"DRY_RUN" envDefault:"false"`
-	Log             Log           `envPrefix:"LOG_"`
+	Timeout          time.Duration `env:"TIMEOUT" envDefault:"30m"`
+	MaxAge           time.Duration `env:"MAX_AGE" envDefault:"720h"`
+	AgeFrom          AgeFrom       `env:"AGE_FROM" envDefault:"pushed"`
+	TagState         TagState      `env:"TAG_STATE" envDefault:"any"`
+	KeepTagPrefixes  TagPrefixes   `env:"KEEP_TAG_PREFIXES" envDefault:""`
+	DeleteImages     bool          `env:"DELETE_IMAGES" envDefault:"false"`
+	DryRun           bool          `env:"DRY_RUN" envDefault:"false"`
+	PruneNeverPulled bool          `env:"PRUNE_NEVER_PULLED" envDefault:"false"`
+	Log              Log           `envPrefix:"LOG_"`
 }
 
 type Crusoe struct {

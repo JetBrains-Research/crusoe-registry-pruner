@@ -54,18 +54,11 @@ A manifest is deleted when all the following hold, checked in this order:
   so standard read/write repositories get walked alongside pull-through caches.
   Protect anything you publish yourself with `KEEP_TAG_PREFIXES` and `TAG_STATE`,
   or point the job at a project that only holds caches.
-- **There is no keep-last-`n` floor.**
-  If every manifest of an image is older than `MAX_AGE`,
+- **There is no keep-last-`n` floor.** If every manifest of an image is older than `MAX_AGE`,
   all of them go and the image ends up empty.
 - **`MAX_AGE=0` turns off age-based pruning**, which makes the whole run a no-op.
-- **`KEEP_TAG_PREFIXES` does prefix matching, not regex**.
-  The prefix `v` keeps `v1.2.3` and `vendor-test`.
-- **A zero-reference timestamp is never pruned.**
-  With `AGE_FROM=pulled`, a manifest nobody has ever pulled has a zero `pulled_at` and survives every run.
-  That is the conservative choice, and it is also frequently the exact manifest you wanted to be removed.
-  Use `activity` to let never-pulled content age out from its push time.
-- **Deletion is by digest.**
-  A manifest carrying five tags loses all five. The tool never untags a single reference.
+- **`KEEP_TAG_PREFIXES` does prefix matching, not regex**. The prefix `v` keeps `v1.2.3` and `vendor-test`.
+- **Deletion is by digest.** A manifest carrying five tags loses all five. The tool never untags a single reference.
 
 ### Dry runs
 
@@ -114,22 +107,22 @@ Configuration is environment-only, parsed under the `CRUSOE_` prefix.
 There are no CLI flags and no config file. Enum values are case-insensitive.
 Durations use Go syntax (`720h`, `45m`, `1h30m`).
 
-| Variable                           | Type                                   | Default | Description                                                                                                  |
-|------------------------------------|----------------------------------------|---------|--------------------------------------------------------------------------------------------------------------|
-| `CRUSOE_PROJECT_ID`                | `uuid.UUID`                            |         | Crusoe project whose registry gets pruned.                                                                   |
-| `CRUSOE_ACCESS_KEY`                | `string`                               |         | Crusoe API access key.                                                                                       |
-| `CRUSOE_SECRET_KEY`                | `string`                               |         | Crusoe API secret key.                                                                                       |
-| `CRUSOE_PRUNER_TIMEOUT`            | `time.Duration`                        | `30m`   | Deadline for the entire run. On expiry the job stops and exits non-zero.                                     |
-| `CRUSOE_PRUNER_MAX_AGE`            | `time.Duration`                        | `720h`  | Manifests older than this get pruned. `0` turns off age-based pruning, making the run a no-op.               |
-| `CRUSOE_PRUNER_AGE_FROM`           | `pushed` \| `pulled` \| `activity`     | `pushed` | The timestamp age is measured from. `activity` uses the later of `pushed_at` and `pulled_at`.                |
-| `CRUSOE_PRUNER_TAG_STATE`          | `any` \| `tagged` \| `untagged`        | `any`   | Restrict pruning to tagged or untagged manifests.                                                            |
-| `CRUSOE_PRUNER_KEEP_TAG_PREFIXES`  | `[]string`                             | `[]`    | Manifests with any tag starting with one of these prefixes are never pruned. Prefix match, not regex.        |
-| `CRUSOE_PRUNER_DELETE_IMAGES`      | `bool`                                 | `false` | Also delete the image record once all of its manifests have been pruned.                                     |
-| `CRUSOE_PRUNER_DRY_RUN`            | `bool`                                 | `false` | Log what would be deleted without actually deleting.                                                         |
-| `CRUSOE_PRUNER_LOG_FORMAT`         | `json` \| `text`                       | `json`  | Log handler.                                                                                                 |
-| `CRUSOE_PRUNER_LOG_LEVEL`          | `debug` \| `info` \| `warn` \| `error` | `info`  | Minimum log level.                                                                                           |
-| `CRUSOE_PRUNER_LOG_SOURCE`         | `bool`                                 | `false` | Include source file and line in log records.                                                                 |
-| `CRUSOE_PRUNER_PRUNE_NEVER_PULLED`  | `bool`                                  | `false`  | Manifests that have never been pulled get pruned. Has effect only when `AGE_FROM=pulled`, ignored otherwise. |
+| Variable                           | Type                                   | Default  | Description                                                                                                         |
+|------------------------------------|----------------------------------------|----------|---------------------------------------------------------------------------------------------------------------------|
+| `CRUSOE_PROJECT_ID`                | `uuid.UUID`                            |          | Crusoe project whose registry gets pruned.                                                                          |
+| `CRUSOE_ACCESS_KEY`                | `string`                               |          | Crusoe API access key.                                                                                              |
+| `CRUSOE_SECRET_KEY`                | `string`                               |          | Crusoe API secret key.                                                                                              |
+| `CRUSOE_PRUNER_TIMEOUT`            | `time.Duration`                        | `30m`    | Deadline for the entire run. On expiry the job stops and exits non-zero.                                            |
+| `CRUSOE_PRUNER_MAX_AGE`            | `time.Duration`                        | `720h`   | Manifests older than this get pruned. `0` turns off age-based pruning, making the run a no-op.                      |
+| `CRUSOE_PRUNER_AGE_FROM`           | `pushed` \| `pulled` \| `activity`     | `pushed` | The timestamp age is measured from. `activity` uses the later of `pushed_at` and `pulled_at`.                       |
+| `CRUSOE_PRUNER_TAG_STATE`          | `any` \| `tagged` \| `untagged`        | `any`    | Restrict pruning to tagged or untagged manifests.                                                                   |
+| `CRUSOE_PRUNER_KEEP_TAG_PREFIXES`  | `[]string`                             | `[]`     | Manifests with any tag starting with one of these prefixes are never pruned. Prefix match, not regex.               |
+| `CRUSOE_PRUNER_DELETE_IMAGES`      | `bool`                                 | `false`  | Also delete the image record once all of its manifests have been pruned.                                            |
+| `CRUSOE_PRUNER_DRY_RUN`            | `bool`                                 | `false`  | Log what would be deleted without actually deleting.                                                                |
+| `CRUSOE_PRUNER_LOG_FORMAT`         | `json` \| `text`                       | `json`   | Log handler.                                                                                                        |
+| `CRUSOE_PRUNER_LOG_LEVEL`          | `debug` \| `info` \| `warn` \| `error` | `info`   | Minimum log level.                                                                                                  |
+| `CRUSOE_PRUNER_LOG_SOURCE`         | `bool`                                 | `false`  | Include source file and line in log records.                                                                        |
+| `CRUSOE_PRUNER_PRUNE_NEVER_PULLED` | `bool`                                 | `false`  | Manifests that have never been pulled get pruned. Only works activity is measured from `pulled`, ignored otherwise. |
 
 ### Example
 
@@ -137,16 +130,7 @@ Prune untagged manifests untouched for 14 days, keep anything tagged `v*` or
 `release-*`, and clean up the emptied image records:
 
 ```sh
-export CRUSOE_PROJECT_ID=...
-export CRUSOE_ACCESS_KEY=...
-export CRUSOE_SECRET_KEY=...
-export CRUSOE_PRUNER_MAX_AGE=336h
-export CRUSOE_PRUNER_AGE_FROM=activity
-export CRUSOE_PRUNER_TAG_STATE=untagged
-export CRUSOE_PRUNER_KEEP_TAG_PREFIXES=v,release-
-export CRUSOE_PRUNER_DELETE_IMAGES=true
-export CRUSOE_PRUNER_DRY_RUN=true
-
+export $(grep -v '^#' .env | xargs)
 go run .
 ```
 

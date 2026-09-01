@@ -43,6 +43,9 @@ func ShouldPrune(
 		reference = manifest.PushedAt
 	case config.Pulled:
 		reference = manifest.PulledAt
+		if pruner.PruneNeverPulled && reference.IsZero() {
+			return true
+		}
 	case config.Activity:
 		reference = slices.MaxFunc([]time.Time{manifest.PulledAt, manifest.PushedAt}, time.Time.Compare)
 	default:

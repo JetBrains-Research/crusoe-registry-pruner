@@ -32,4 +32,7 @@ data:
   {{- if .timeout }}
   TIMEOUT: {{ .timeout | quote }}
   {{- end }}
+  {{- if .pruneNeverPulled }}
+  PRUNE_NEVER_PULLED: {{ .pruneNeverPulled | quote }}
+  {{- end }}
   {{- end }}

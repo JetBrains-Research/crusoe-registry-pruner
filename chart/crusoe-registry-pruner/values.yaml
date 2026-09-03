@@ -6,6 +6,7 @@ config:
   maxAge: ""
   tagState: ""
   timeout: ""
+  pruneNeverPulled: false
 
 concurrencyPolicy: "Forbid"
 extraEnv: []

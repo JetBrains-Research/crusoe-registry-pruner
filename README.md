@@ -134,7 +134,48 @@ export $(grep -v '^#' .env | xargs)
 go run .
 ```
 
-## Building
+## Local development
+
+Prerequisites: Go 1.27 or later and [`pre-commit`](https://pre-commit.com), which is required.
+Docker, `helm` and `kubectl` only if you work with the chart and image respectively.
+
+```sh
+git clone https://github.com/jetbrains-research/crusoe-registry-pruner
+cd crusoe-registry-pruner
+go mod download
+pre-commit install
+```
+
+Configuration is environment-only, so local runs read from a `.env` file you create yourself:
+
+```dotenv
+CRUSOE_PROJECT_ID=...
+CRUSOE_ACCESS_KEY=...
+CRUSOE_SECRET_KEY=...
+
+CRUSOE_PRUNER_DRY_RUN=true
+CRUSOE_PRUNER_LOG_FORMAT=text
+CRUSOE_PRUNER_LOG_LEVEL=debug
+CRUSOE_PRUNER_MAX_AGE=720h
+```
+
+Run it:
+
+```sh
+export $(grep -v '^#' .env | xargs)
+go run .
+```
+
+Checks before pushing:
+
+```sh
+gofmt -l .
+go vet ./...
+go test ./...
+helm lint chart/crusoe-registry-pruner
+```
+
+### Building
 
 ```sh
 go build ./...

@@ -24,7 +24,7 @@ RUN --mount=type=cache,target=/go/pkg/mod \
         -trimpath \
         -o /go/bin/crusoe-registry-pruner;
 
-FROM gcr.io/distroless/static-debian13@sha256:1c2c046bc09ed40fad370b599a0b1ae7987f55b01e247cf27a7c27cd97e5bbc7
+FROM gcr.io/distroless/static-debian13@sha256:f2ea2709ac8db56323cbd7d014277f32cb572d9ea124b0076f7aafe5980678fe
 
 USER 65532:65532
 

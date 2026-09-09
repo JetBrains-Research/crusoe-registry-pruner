@@ -12,7 +12,7 @@ import (
 
 	"github.com/antihax/optional"
 	"github.com/crusoecloud/client-go/auth/v1"
-	"github.com/crusoecloud/client-go/swagger/v1alpha5"
+	"github.com/crusoecloud/client-go/swagger/v1"
 	"github.com/hashicorp/go-retryablehttp"
 )
 

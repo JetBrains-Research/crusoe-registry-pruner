@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/crusoecloud/client-go/swagger/v1alpha5"
+	"github.com/crusoecloud/client-go/swagger/v1"
 )
 
 func ShouldPrune(

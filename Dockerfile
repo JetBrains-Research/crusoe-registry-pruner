@@ -26,6 +26,16 @@ RUN --mount=type=cache,target=/go/pkg/mod \
 
 FROM gcr.io/distroless/static-debian13@sha256:1c2c046bc09ed40fad370b599a0b1ae7987f55b01e247cf27a7c27cd97e5bbc7
 
+ARG VERSION
+
+LABEL \
+    org.opencontainers.image.title="crusoe-registry-pruner" \
+    org.opencontainers.image.description="Single-shot Go job that deletes stale manifests from Crusoe Container Registry (CCR)" \
+    org.opencontainers.image.source="https://github.com/JetBrains-Research/crusoe-registry-pruner" \
+    org.opencontainers.image.authors="ozren.dabic@jetbrains.com" \
+    org.opencontainers.image.licenses="MIT" \
+    org.opencontainers.image.version=$VERSION
+
 USER 65532:65532
 
 COPY --from=build --chmod=755 /go/bin/crusoe-registry-pruner /usr/local/bin/

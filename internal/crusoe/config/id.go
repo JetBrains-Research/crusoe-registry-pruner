@@ -3,8 +3,7 @@ package config
 import (
 	"fmt"
 	"log/slog"
-
-	"github.com/google/uuid"
+	"uuid"
 )
 
 type ID uuid.UUID
@@ -22,11 +21,11 @@ func (id ID) String() string {
 }
 
 func (id *ID) UnmarshalText(text []byte) error {
-	value, err := uuid.ParseBytes(text)
+	value, err := uuid.Parse(string(text))
 	if err != nil {
 		return err
 	}
-	if value == uuid.Nil {
+	if value == uuid.Nil() {
 		return fmt.Errorf("invalid id: %q", text)
 	}
 

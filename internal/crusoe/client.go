@@ -38,7 +38,7 @@ func NewClient(
 
 	retryableHttpClient := retryablehttp.NewClient()
 	retryableHttpClient.Logger = logger
-	retryableHttpClient.RetryMax = 5
+	retryableHttpClient.RetryMax = 4
 	retryableHttpClient.HTTPClient.Transport = auth.NewAuthenticatingTransport(
 		retryableHttpClient.HTTPClient.Transport,
 		string(cfg.AccessKey),

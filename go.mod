@@ -5,7 +5,7 @@ go 1.27
 require (
 	github.com/antihax/optional v1.0.0
 	github.com/caarlos0/env/v11 v11.4.1
-	github.com/crusoecloud/client-go v1.0.14
+	github.com/crusoecloud/client-go v1.0.17
 	github.com/hashicorp/go-retryablehttp v0.7.8
 )
 

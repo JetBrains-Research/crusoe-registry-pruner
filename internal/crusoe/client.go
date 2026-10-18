@@ -41,6 +41,8 @@ func NewClient(
 	retryableHttpClient := retryablehttp.NewClient()
 	retryableHttpClient.Logger = logger
 	retryableHttpClient.RetryMax = 4
+	retryableHttpClient.CheckRetry = checkRetry
+	retryableHttpClient.ErrorHandler = retryablehttp.PassthroughErrorHandler
 	retryableHttpClient.HTTPClient.Transport = auth.NewAuthenticatingTransport(
 		retryableHttpClient.HTTPClient.Transport,
 		string(cfg.AccessKey),
@@ -300,6 +302,16 @@ func (client *Client) cleanUpResponseBody(closer io.Closer) {
 	if err := closer.Close(); err != nil {
 		client.logger.Error("failed to close response body", "error", err)
 	}
+}
+
+func checkRetry(ctx context.Context, response *http.Response, err error) (bool, error) {
+	if ctx.Err() != nil {
+		return false, ctx.Err()
+	}
+	if err != nil {
+		return retryablehttp.DefaultRetryPolicy(ctx, response, err)
+	}
+	return response.StatusCode == http.StatusTooManyRequests, nil
 }
 
 func collectPages[T any](fetch func(page int32) ([]T, error)) ([]T, error) {

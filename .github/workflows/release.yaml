@@ -1,0 +1,105 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  IMAGE: ghcr.io/jetbrains-research/crusoe-registry-pruner
+  CHART_REGISTRY: oci://ghcr.io/jetbrains-research/charts
+
+jobs:
+  checks:
+    name: Go
+    uses: ./.github/workflows/go.yaml
+
+  image:
+    name: Publish image
+    needs: checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4.4.1
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v4.6.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v6.2.0
+        env:
+          DOCKER_METADATA_ANNOTATIONS_LEVELS: manifest,index
+        with:
+          images: ${{ env.IMAGE }}
+          flavor: latest=false
+          tags: type=ref,event=tag
+
+      - name: Build and push
+        uses: docker/build-push-action@v7.4.0
+        with:
+          platforms: linux/amd64,linux/arm64
+          build-args: VERSION=${{ github.ref_name }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          annotations: ${{ steps.meta.outputs.annotations }}
+          push: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  chart:
+    name: Publish chart
+    needs: image
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v5.0.1
+        with:
+          version: v4.3.1
+
+      - name: Lint
+        run: helm lint chart/crusoe-registry-pruner
+
+      - name: Package
+        id: package
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          helm package chart/crusoe-registry-pruner \
+            --version "$version" \
+            --app-version "$version" \
+            --destination "$RUNNER_TEMP/charts"
+          echo "archive=$RUNNER_TEMP/charts/crusoe-registry-pruner-${version}.tgz" >> "$GITHUB_OUTPUT"
+
+      - name: Log in to GHCR
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: echo "$GITHUB_TOKEN" | helm registry login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
+
+      - name: Push
+        env:
+          ARCHIVE: ${{ steps.package.outputs.archive }}
+        run: helm push "$ARCHIVE" "$CHART_REGISTRY"

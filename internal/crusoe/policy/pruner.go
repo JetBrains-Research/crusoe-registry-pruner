@@ -1,12 +1,13 @@
 package policy
 
 import (
-	"crusoe-registry-pruner/internal/crusoe/config"
 	"slices"
 	"strings"
 	"time"
 
 	"github.com/crusoecloud/client-go/swagger/v1"
+
+	"crusoe-registry-pruner/internal/crusoe/config"
 )
 
 func ShouldPrune(
@@ -23,6 +24,7 @@ func ShouldPrune(
 	}
 
 	switch pruner.TagState {
+	case config.Any:
 	case config.Tagged:
 		if len(manifest.Tags) == 0 {
 			return false

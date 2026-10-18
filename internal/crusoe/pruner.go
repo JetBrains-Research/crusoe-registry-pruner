@@ -2,10 +2,6 @@ package crusoe
 
 import (
 	"context"
-	"crusoe-registry-pruner/internal/crusoe/config"
-	"crusoe-registry-pruner/internal/crusoe/logging"
-	"crusoe-registry-pruner/internal/crusoe/policy"
-	"crusoe-registry-pruner/internal/crusoe/utils"
 	"errors"
 	"log/slog"
 	"os"
@@ -13,6 +9,11 @@ import (
 	"runtime/debug"
 	"syscall"
 	"time"
+
+	"crusoe-registry-pruner/internal/crusoe/config"
+	"crusoe-registry-pruner/internal/crusoe/logging"
+	"crusoe-registry-pruner/internal/crusoe/policy"
+	"crusoe-registry-pruner/internal/crusoe/utils"
 )
 
 func PruneCcr() error {
@@ -52,7 +53,7 @@ func PruneCcr() error {
 		slog.Info("dry run mode enabled")
 	}
 
-	slog.Info("starting cleanup", "project", cfg.ProjectId)
+	slog.Info("starting cleanup", "project", cfg.ProjectID)
 	repositories, err := client.GetRepositories(ctx)
 	if err != nil {
 		return err

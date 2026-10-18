@@ -4,8 +4,6 @@ import (
 	"bytes"
 	"cmp"
 	"context"
-	"crusoe-registry-pruner/internal/crusoe/config"
-	"crusoe-registry-pruner/internal/crusoe/utils"
 	"errors"
 	"fmt"
 	"io"
@@ -16,6 +14,9 @@ import (
 	"github.com/crusoecloud/client-go/auth/v1"
 	"github.com/crusoecloud/client-go/swagger/v1"
 	"github.com/hashicorp/go-retryablehttp"
+
+	"crusoe-registry-pruner/internal/crusoe/config"
+	"crusoe-registry-pruner/internal/crusoe/utils"
 )
 
 const (
@@ -62,24 +63,24 @@ func NewClient(
 
 	logger = cmp.Or(logger, slog.Default())
 
-	retryableHttpClient := retryablehttp.NewClient()
-	retryableHttpClient.Logger = logger
-	retryableHttpClient.RetryMax = 4
-	retryableHttpClient.CheckRetry = checkRetry
-	retryableHttpClient.ErrorHandler = retryablehttp.PassthroughErrorHandler
-	retryableHttpClient.HTTPClient.Transport = auth.NewAuthenticatingTransport(
-		retryableHttpClient.HTTPClient.Transport,
+	retryableHTTPClient := retryablehttp.NewClient()
+	retryableHTTPClient.Logger = logger
+	retryableHTTPClient.RetryMax = 4
+	retryableHTTPClient.CheckRetry = checkRetry
+	retryableHTTPClient.ErrorHandler = retryablehttp.PassthroughErrorHandler
+	retryableHTTPClient.HTTPClient.Transport = auth.NewAuthenticatingTransport(
+		retryableHTTPClient.HTTPClient.Transport,
 		string(cfg.AccessKey),
 		string(cfg.SecretKey),
 	)
 
 	apiClientConfig := swagger.NewConfiguration()
 	apiClientConfig.UserAgent = "crusoe-registry-pruner/" + utils.Version
-	apiClientConfig.HTTPClient = retryableHttpClient.StandardClient()
+	apiClientConfig.HTTPClient = retryableHTTPClient.StandardClient()
 
 	return &client{
 		dryRun:    cfg.Pruner.DryRun,
-		project:   cfg.ProjectId.String(),
+		project:   cfg.ProjectID.String(),
 		logger:    logger,
 		apiClient: swagger.NewAPIClient(apiClientConfig),
 	}, nil

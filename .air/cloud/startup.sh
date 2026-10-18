@@ -38,7 +38,10 @@ if [ -n "$WARMUP" ]; then
       chmod +x "$HOME/.docker/cli-plugins/docker-buildx"
     fi
     log "building Docker image crusoe-registry-pruner:dev"
-    DOCKER_BUILDKIT=1 docker build -t crusoe-registry-pruner:dev . || log "WARNING: docker build failed (non-fatal)"
+    # Build steps need the egress proxy (when set) to reach proxy.golang.org.
+    DOCKER_BUILDKIT=1 docker build --network host \
+      --build-arg HTTP_PROXY --build-arg HTTPS_PROXY --build-arg NO_PROXY \
+      -t crusoe-registry-pruner:dev . || log "WARNING: docker build failed (non-fatal)"
   else
     log "docker daemon not reachable; skipping image build"
   fi

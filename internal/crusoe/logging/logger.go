@@ -1,10 +1,11 @@
 package logging
 
 import (
-	"crusoe-registry-pruner/internal/crusoe/config"
 	"fmt"
 	"log/slog"
 	"os"
+
+	"crusoe-registry-pruner/internal/crusoe/config"
 )
 
 func InitializeDefaultLogger() {

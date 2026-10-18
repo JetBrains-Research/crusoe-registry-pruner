@@ -1,10 +1,11 @@
 package main
 
 import (
-	"crusoe-registry-pruner/internal/crusoe"
-	"crusoe-registry-pruner/internal/crusoe/logging"
 	"log/slog"
 	"os"
+
+	"crusoe-registry-pruner/internal/crusoe"
+	"crusoe-registry-pruner/internal/crusoe/logging"
 )
 
 func main() {

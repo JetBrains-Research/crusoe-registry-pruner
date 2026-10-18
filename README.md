@@ -25,7 +25,7 @@ Each run will:
 1. List every repository in `CRUSOE_PROJECT_ID`.
 2. For each repository, list every image.
 3. For each image, list every manifest.
-4. Apply the retention policy to each manifest. If it fails, delete the manifest
+4. Apply the retention policy to each manifest. If it matches, delete the manifest
    by digest, which also removes every tag pointing at it.
 5. If `DELETE_IMAGES` is set and every manifest of an image was deleted, delete
    the now-empty image record.
@@ -122,22 +122,27 @@ Durations use Go syntax (`720h`, `45m`, `1h30m`).
 | `CRUSOE_PRUNER_LOG_FORMAT`         | `json` \| `text`                       | `json`   | Log handler.                                                                                                        |
 | `CRUSOE_PRUNER_LOG_LEVEL`          | `debug` \| `info` \| `warn` \| `error` | `info`   | Minimum log level.                                                                                                  |
 | `CRUSOE_PRUNER_LOG_SOURCE`         | `bool`                                 | `false`  | Include source file and line in log records.                                                                        |
-| `CRUSOE_PRUNER_PRUNE_NEVER_PULLED` | `bool`                                 | `false`  | Manifests that have never been pulled get pruned. Only works activity is measured from `pulled`, ignored otherwise. |
+| `CRUSOE_PRUNER_PRUNE_NEVER_PULLED` | `bool`                                 | `false`  | Manifests that have never been pulled get pruned. Only applies when age is measured from `pulled`.                  |
 
 ### Example
 
 Prune untagged manifests untouched for 14 days, keep anything tagged `v*` or
 `release-*`, and clean up the emptied image records:
 
-```sh
-export $(grep -v '^#' .env | xargs)
-go run .
+```dotenv
+CRUSOE_PRUNER_MAX_AGE=336h
+CRUSOE_PRUNER_AGE_FROM=activity
+CRUSOE_PRUNER_TAG_STATE=untagged
+CRUSOE_PRUNER_KEEP_TAG_PREFIXES=v,release-
+CRUSOE_PRUNER_DELETE_IMAGES=true
 ```
 
 ## Local development
 
 Prerequisites: Go 1.27 or later and [`pre-commit`](https://pre-commit.com), which is required.
-Docker, `helm` and `kubectl` only if you work with the chart and image respectively.
+[`golangci-lint`](https://golangci-lint.run) v2 is optional for running the linters by hand,
+as the `pre-commit` hooks build their own copy. Docker only if you work with the image,
+`helm` and `kubectl` only if you work with the chart.
 
 ```sh
 git clone https://github.com/jetbrains-research/crusoe-registry-pruner
@@ -166,11 +171,18 @@ export $(grep -v '^#' .env | xargs)
 go run .
 ```
 
+The `pre-commit` hooks format the code and lint it with [`golangci-lint`](https://golangci-lint.run),
+using the configuration in `.golangci.yaml`. To run them against the whole repository:
+
+```sh
+pre-commit run --all-files
+```
+
 Checks before pushing:
 
 ```sh
-gofmt -l .
-go vet ./...
+golangci-lint fmt --diff
+golangci-lint run
 go test ./...
 helm lint chart/crusoe-registry-pruner
 ```
@@ -224,7 +236,7 @@ image:
   repository: ghcr.io/jetbrains-research/crusoe-registry-pruner
   tag: v0.1.0
 
-schedule: "0 3 * * *" # 03:00 UTC daily
+schedule: "0 3 * * *" # 03:00 daily (cluster timezone)
 secretName: crusoe-secrets
 
 config:
@@ -254,8 +266,7 @@ Set `image.tag` explicitly. The chart falls back to `v{{ .Chart.AppVersion }}`.
 helm upgrade --install crusoe-registry-pruner chart/crusoe-registry-pruner \
   --namespace crusoe-system \
   --values values.prod.yaml \
-  --create-namespace \
-  --allow-unreleased
+  --create-namespace
 ```
 
 Render without applying to check the output first:
@@ -293,7 +304,7 @@ kubectl logs -n crusoe-system -l app.kubernetes.io/name=crusoe-registry-pruner -
 | `concurrencyPolicy`        | `Forbid`                                             | Prevents overlapping runs.                                                                                                |
 | `restartPolicy`            | `Never`                                              | Pod restart policy.                                                                                                       |
 | `historyLimits.successful` | `3`                                                  | Number of succeeded `Job` resources to keep after a run finishes.                                                         |
-| `historyLimits.failed`     | `3`                                                  | Nomber of failed `Job` resources to keep after a run finishes.                                                            |
+| `historyLimits.failed`     | `3`                                                  | Number of failed `Job` resources to keep after a run finishes.                                                            |
 | `resources`                | 50m CPU and 32Mi memory requested, 64Mi memory limit | Container resources.                                                                                                      |
 | `securityContext`          | `runAsNonRoot`, all capabilities dropped             | Container security context.                                                                                               |
 | `extraEnv`                 | `[]`                                                 | Extra `env` entries appended to the container.                                                                            |

@@ -37,7 +37,15 @@ func (apiError *APIError) Error() string {
 	)
 }
 
-type Client struct {
+type Client interface {
+	GetRepositories(ctx context.Context) ([]swagger.Repository, error)
+	GetImages(ctx context.Context, repository swagger.Repository) ([]swagger.CcrImage, error)
+	GetManifests(ctx context.Context, repository swagger.Repository, image swagger.CcrImage) ([]swagger.Manifest, error)
+	DeleteImage(ctx context.Context, repository swagger.Repository, image swagger.CcrImage) error
+	DeleteManifest(ctx context.Context, repository swagger.Repository, image swagger.CcrImage, manifest swagger.Manifest) error
+}
+
+type client struct {
 	apiClient *swagger.APIClient
 	logger    *slog.Logger
 	dryRun    bool
@@ -47,7 +55,7 @@ type Client struct {
 func NewClient(
 	cfg *config.Crusoe,
 	logger *slog.Logger,
-) (*Client, error) {
+) (Client, error) {
 	if cfg == nil {
 		return nil, errors.New("config is nil")
 	}
@@ -69,7 +77,7 @@ func NewClient(
 	apiClientConfig.UserAgent = "crusoe-registry-pruner/" + utils.Version
 	apiClientConfig.HTTPClient = retryableHttpClient.StandardClient()
 
-	return &Client{
+	return &client{
 		dryRun:    cfg.Pruner.DryRun,
 		project:   cfg.ProjectId.String(),
 		logger:    logger,
@@ -77,7 +85,7 @@ func NewClient(
 	}, nil
 }
 
-func (client *Client) GetRepositories(
+func (client *client) GetRepositories(
 	ctx context.Context,
 ) ([]swagger.Repository, error) {
 	client.logger.Info("getting repositories")
@@ -96,7 +104,7 @@ func (client *Client) GetRepositories(
 	return repositories, nil
 }
 
-func (client *Client) getRepositories(
+func (client *client) getRepositories(
 	ctx context.Context,
 	page int32,
 ) ([]swagger.Repository, error) {
@@ -118,7 +126,7 @@ func (client *Client) getRepositories(
 	return repositories.Items, nil
 }
 
-func (client *Client) GetImages(
+func (client *client) GetImages(
 	ctx context.Context,
 	repository swagger.Repository,
 ) ([]swagger.CcrImage, error) {
@@ -145,7 +153,7 @@ func (client *Client) GetImages(
 	return images, nil
 }
 
-func (client *Client) getImages(
+func (client *client) getImages(
 	ctx context.Context,
 	repository swagger.Repository,
 	page int32,
@@ -169,7 +177,7 @@ func (client *Client) getImages(
 	return images.Items, nil
 }
 
-func (client *Client) GetManifests(
+func (client *client) GetManifests(
 	ctx context.Context,
 	repository swagger.Repository,
 	image swagger.CcrImage,
@@ -203,7 +211,7 @@ func (client *Client) GetManifests(
 	return manifests, nil
 }
 
-func (client *Client) getManifests(
+func (client *client) getManifests(
 	ctx context.Context,
 	repository swagger.Repository,
 	image swagger.CcrImage,
@@ -227,7 +235,7 @@ func (client *Client) getManifests(
 	return manifests.Items, nil
 }
 
-func (client *Client) DeleteImage(
+func (client *client) DeleteImage(
 	ctx context.Context,
 	repository swagger.Repository,
 	image swagger.CcrImage,
@@ -266,7 +274,7 @@ func (client *Client) DeleteImage(
 	return nil
 }
 
-func (client *Client) DeleteManifest(
+func (client *client) DeleteManifest(
 	ctx context.Context,
 	repository swagger.Repository,
 	image swagger.CcrImage,
@@ -313,7 +321,7 @@ func (client *Client) DeleteManifest(
 	return nil
 }
 
-func (client *Client) cleanUpResponseBody(closer io.Closer) {
+func (client *client) cleanUpResponseBody(closer io.Closer) {
 	if closer == nil {
 		return
 	}

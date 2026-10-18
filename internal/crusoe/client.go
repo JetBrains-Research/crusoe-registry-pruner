@@ -1,6 +1,7 @@
 package crusoe
 
 import (
+	"bytes"
 	"cmp"
 	"context"
 	"crusoe-registry-pruner/internal/crusoe/config"
@@ -9,6 +10,7 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
+	"net/http"
 
 	"github.com/antihax/optional"
 	"github.com/crusoecloud/client-go/auth/v1"
@@ -20,6 +22,20 @@ const (
 	pageSize  = 100
 	pageLimit = 1000
 )
+
+type APIError struct {
+	Body       []byte
+	StatusCode int
+}
+
+func (apiError *APIError) Error() string {
+	return fmt.Sprintf(
+		"crusoe api: %d %s: %s",
+		apiError.StatusCode,
+		http.StatusText(apiError.StatusCode),
+		bytes.TrimSpace(apiError.Body),
+	)
+}
 
 type Client struct {
 	apiClient *swagger.APIClient
@@ -97,7 +113,7 @@ func (client *Client) getRepositories(
 		defer client.cleanUpResponseBody(response.Body)
 	}
 	if err != nil {
-		return nil, err
+		return nil, wrapError(response, err)
 	}
 	return repositories.Items, nil
 }
@@ -148,7 +164,7 @@ func (client *Client) getImages(
 		defer client.cleanUpResponseBody(response.Body)
 	}
 	if err != nil {
-		return nil, err
+		return nil, wrapError(response, err)
 	}
 	return images.Items, nil
 }
@@ -206,7 +222,7 @@ func (client *Client) getManifests(
 		defer client.cleanUpResponseBody(response.Body)
 	}
 	if err != nil {
-		return nil, err
+		return nil, wrapError(response, err)
 	}
 	return manifests.Items, nil
 }
@@ -242,7 +258,9 @@ func (client *Client) DeleteImage(
 		defer client.cleanUpResponseBody(response.Body)
 	}
 	if err != nil {
-		return fmt.Errorf("deleting image %s/%s: %w", repository.Name, image.Name, err)
+		return fmt.Errorf(
+			"deleting image %s/%s: %w", repository.Name, image.Name, wrapError(response, err),
+		)
 	}
 	client.logger.Info("image deleted", group)
 	return nil
@@ -288,7 +306,7 @@ func (client *Client) DeleteManifest(
 	if err != nil {
 		return fmt.Errorf(
 			"deleting manifest %s/%s@%s: %w",
-			repository.Name, image.Name, manifest.Digest, err,
+			repository.Name, image.Name, manifest.Digest, wrapError(response, err),
 		)
 	}
 	client.logger.Info("manifest deleted", group)
@@ -312,6 +330,17 @@ func checkRetry(ctx context.Context, response *http.Response, err error) (bool, 
 		return retryablehttp.DefaultRetryPolicy(ctx, response, err)
 	}
 	return response.StatusCode == http.StatusTooManyRequests, nil
+}
+
+func wrapError(response *http.Response, err error) error {
+	swaggerError, ok := errors.AsType[swagger.GenericSwaggerError](err)
+	if !ok || response == nil {
+		return err
+	}
+	return &APIError{
+		Body:       swaggerError.Body(),
+		StatusCode: response.StatusCode,
+	}
 }
 
 func collectPages[T any](fetch func(page int32) ([]T, error)) ([]T, error) {

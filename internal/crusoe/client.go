@@ -23,6 +23,9 @@ const (
 	pageLimit = 1000
 )
 
+// endpoint is the Crusoe API base path. Tests point it at a fake server.
+var endpoint = swagger.NewConfiguration().BasePath
+
 type APIError struct {
 	Body       []byte
 	StatusCode int
@@ -74,6 +77,7 @@ func NewClient(
 	)
 
 	apiClientConfig := swagger.NewConfiguration()
+	apiClientConfig.BasePath = endpoint
 	apiClientConfig.UserAgent = "crusoe-registry-pruner/" + utils.Version
 	apiClientConfig.HTTPClient = retryableHttpClient.StandardClient()
 

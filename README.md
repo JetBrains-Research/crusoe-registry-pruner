@@ -175,6 +175,9 @@ go test ./...
 helm lint chart/crusoe-registry-pruner
 ```
 
+The tests in `internal/crusoe` run the whole job end to end against an in-memory fake of the CCR API,
+so they need neither credentials nor network access. CI runs the same checks on every pull request.
+
 ### Building
 
 ```sh

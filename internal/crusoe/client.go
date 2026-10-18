@@ -36,6 +36,8 @@ func NewClient(
 		return nil, errors.New("config is nil")
 	}
 
+	logger = cmp.Or(logger, slog.Default())
+
 	retryableHttpClient := retryablehttp.NewClient()
 	retryableHttpClient.Logger = logger
 	retryableHttpClient.RetryMax = 4
@@ -52,7 +54,7 @@ func NewClient(
 	return &Client{
 		dryRun:    cfg.Pruner.DryRun,
 		project:   cfg.ProjectId.String(),
-		logger:    cmp.Or(logger, slog.Default()),
+		logger:    logger,
 		apiClient: swagger.NewAPIClient(apiClientConfig),
 	}, nil
 }

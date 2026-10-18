@@ -1,11 +1,8 @@
 ARG VERSION=dev
 
-FROM golang:1.27 AS build
+FROM --platform=$BUILDPLATFORM golang:1.27 AS build
 
-ARG VERSION
-
-ENV CGO_ENABLED=0 \
-    GOOS=linux
+ENV CGO_ENABLED=0
 
 WORKDIR /go/src/app
 
@@ -16,9 +13,14 @@ RUN --mount=type=cache,target=/go/pkg/mod \
 
 COPY . .
 
+ARG VERSION
+ARG TARGETOS
+ARG TARGETARCH
+
 RUN --mount=type=cache,target=/go/pkg/mod \
     --mount=type=cache,target=/root/.cache/go-build \
     set -eu; \
+    export GOOS="${TARGETOS}" GOARCH="${TARGETARCH}"; \
     go vet -v ./...; \
     go build -ldflags="-w -s -X crusoe-registry-pruner/internal/crusoe/utils.Version=${VERSION}" \
         -trimpath \

@@ -23,8 +23,8 @@ func ShouldPrune(
 		}
 	}
 
+	//nolint:exhaustive // `config.Any` intentionally falls through with no-op
 	switch pruner.TagState {
-	case config.Any:
 	case config.Tagged:
 		if len(manifest.Tags) == 0 {
 			return false

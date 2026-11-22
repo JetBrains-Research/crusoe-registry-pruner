@@ -40,7 +40,11 @@ restartPolicy: "Never"
 schedule: "0 0 * * *"
 secretName: "crusoe-secrets"
 securityContext:
+  allowPrivilegeEscalation: false
   capabilities:
     drop:
       - ALL
+  readOnlyRootFilesystem: true
   runAsNonRoot: true
+  seccompProfile:
+    type: RuntimeDefault

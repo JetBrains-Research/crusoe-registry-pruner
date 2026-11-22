@@ -115,7 +115,7 @@ Temporary Items
 .apdisk
 
 ### Linux template
-# Gemeral
+# General
 *~
 
 # Temporary files which can be created if a process still has a handle open of a deleted file
@@ -129,3 +129,8 @@ Temporary Items
 
 # .nfs files are created when an open file is removed but is still being accessed
 .nfs*
+
+### Project template
+# Binaries for programs and plugins
+bin
+crusoe-registry-pruner

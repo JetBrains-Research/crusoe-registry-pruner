@@ -23,19 +23,19 @@ data:
   {{- if .keepTagPrefixes }}
   KEEP_TAG_PREFIXES: {{ .keepTagPrefixes | compact | join "," | quote }}
   {{- end }}
-  {{- if .maxAge }}
+  {{- if or .maxAge (eq (toString .maxAge) "0") }}
   MAX_AGE: {{ .maxAge | quote }}
   {{- end }}
   {{- if .pruneNeverPulled }}
   PRUNE_NEVER_PULLED: {{ .pruneNeverPulled | quote }}
   {{- end }}
-  {{- if .requestTimeout }}
+  {{- if or .requestTimeout (eq (toString .requestTimeout) "0") }}
   REQUEST_TIMEOUT: {{ .requestTimeout | quote }}
   {{- end }}
   {{- if .tagState }}
   TAG_STATE: {{ .tagState | quote }}
   {{- end }}
-  {{- if .timeout }}
+  {{- if or .timeout (eq (toString .timeout) "0") }}
   TIMEOUT: {{ .timeout | quote }}
   {{- end }}
   {{- end }}

@@ -285,8 +285,8 @@ log:
   format: json
 ```
 
-Empty strings and `false` under `config` are left out of the `ConfigMap` entirely,
-so the binary's own defaults apply.
+Empty strings and `false` under `config` are left out of the `ConfigMap` entirely, so the binary's own defaults apply.
+A `0` duration is kept, so `maxAge: 0` turns off age-based pruning and `timeout: 0` removes the deadline.
 Set only what you want to override.
 
 Leave `image.tag` unset. Each chart version defaults to the image from the same release.

@@ -1,7 +1,9 @@
 package config
 
 import (
+	"fmt"
 	"log/slog"
+	"reflect"
 	"time"
 
 	"github.com/caarlos0/env/v11"
@@ -35,9 +37,25 @@ type Crusoe struct {
 
 func Load() (*Crusoe, error) {
 	cfg := &Crusoe{}
-	opts := env.Options{Prefix: "CRUSOE_"}
+	opts := env.Options{
+		Prefix: "CRUSOE_",
+		FuncMap: map[reflect.Type]env.ParserFunc{
+			reflect.TypeFor[time.Duration](): parseDuration,
+		},
+	}
 	if err := env.ParseWithOptions(cfg, opts); err != nil {
 		return nil, err
 	}
 	return cfg, nil
+}
+
+func parseDuration(value string) (any, error) {
+	duration, err := time.ParseDuration(value)
+	if err != nil {
+		return nil, err
+	}
+	if duration < 0 {
+		return nil, fmt.Errorf("negative duration %q", value)
+	}
+	return duration, nil
 }

@@ -120,10 +120,10 @@ Durations use Go syntax (`720h`, `45m`, `1h30m`) and must be non-negative.
 | `CRUSOE_PRUNER_KEEP_TAG_PREFIXES`  | `[]string`                             | `[]`     | Manifests with any tag starting with one of these prefixes are never pruned. Prefix match, not regex.     |
 | `CRUSOE_PRUNER_DELETE_IMAGES`      | `bool`                                 | `false`  | Also delete the image record once all of its manifests have been pruned.                                  |
 | `CRUSOE_PRUNER_DRY_RUN`            | `bool`                                 | `false`  | Log what would be deleted without actually deleting.                                                      |
+| `CRUSOE_PRUNER_PRUNE_NEVER_PULLED` | `bool`                                 | `false`  | Manifests that have never been pulled get pruned. Only applies when age is measured from `pulled`.        |
 | `CRUSOE_PRUNER_LOG_FORMAT`         | `json` \| `text`                       | `json`   | Log handler.                                                                                              |
 | `CRUSOE_PRUNER_LOG_LEVEL`          | `debug` \| `info` \| `warn` \| `error` | `info`   | Minimum log level.                                                                                        |
 | `CRUSOE_PRUNER_LOG_SOURCE`         | `bool`                                 | `false`  | Include source file and line in log records.                                                              |
-| `CRUSOE_PRUNER_PRUNE_NEVER_PULLED` | `bool`                                 | `false`  | Manifests that have never been pulled get pruned. Only applies when age is measured from `pulled`.        |
 
 ### Example
 
@@ -197,7 +197,10 @@ go build ./...
 Container image. Multi-stage, static binary on distroless:
 
 ```sh
-docker build --build-arg VERSION="$(git describe --tags --always --dirty)" -t crusoe-registry-pruner:dev .
+docker build \
+    --build-arg VERSION="$(git describe --tags --always --dirty)" \
+    --tag ghcr.io/jetbrains-research/crusoe-registry-pruner \
+    .
 ```
 
 ## Deploying the Helm chart
@@ -213,8 +216,6 @@ so the keys have to be named exactly like the environment variables,
 and the `Secret` has to live in the release namespace.
 
 ```sh
-kubectl create namespace crusoe-system
-
 kubectl create secret generic crusoe-secrets \
   --from-literal=CRUSOE_ACCESS_KEY=$CRUSOE_ACCESS_KEY \
   --from-literal=CRUSOE_API_ENDPOINT=$CRUSOE_API_ENDPOINT \
@@ -224,8 +225,14 @@ kubectl create secret generic crusoe-secrets \
 ```
 
 On a CMK cluster, the auto-provisioned secret may already carry `CRUSOE_ACCESS_KEY` and `CRUSOE_SECRET_KEY`.
-Check with `kubectl get secret -n crusoe-system` before minting a new key pair.
-The chart takes a single `secretName`, so whichever Secret you point it at needs all three keys.
+Check with:
+
+```sh
+kubectl get secret -n crusoe-system
+```
+
+Before minting a new key pair. The chart takes a single `secretName`,
+so whichever `Secret` you point it at needs all three keys.
 
 The Crusoe API key pair is project-wide, not registry-scoped.
 If your organization can mint restricted keys, use one here.

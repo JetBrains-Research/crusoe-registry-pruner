@@ -27,6 +27,8 @@ log:
   level: "info"
   source: false
 
+priorityClassName: ""
+
 resources:
   requests:
     cpu: "50m"

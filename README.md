@@ -303,6 +303,7 @@ kubectl logs -n crusoe-system -l app.kubernetes.io/name=crusoe-registry-pruner -
 | `imagePullSecrets`         | `[]`                                                 | Pull secrets for a private registry.                                                                                      |
 | `concurrencyPolicy`        | `Forbid`                                             | Prevents overlapping runs.                                                                                                |
 | `restartPolicy`            | `Never`                                              | Pod restart policy.                                                                                                       |
+| `priorityClassName`        | default priority or `0`                              | Pod scheduling priority.                                                                                                  |
 | `historyLimits.successful` | `3`                                                  | Number of succeeded `Job` resources to keep after a run finishes.                                                         |
 | `historyLimits.failed`     | `3`                                                  | Number of failed `Job` resources to keep after a run finishes.                                                            |
 | `resources`                | 50m CPU and 32Mi memory requested, 64Mi memory limit | Container resources.                                                                                                      |

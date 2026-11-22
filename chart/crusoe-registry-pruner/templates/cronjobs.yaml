@@ -18,6 +18,9 @@ spec:
             checksum/config: {{ include (print $.Template.BasePath "/configmaps.yaml") . | sha256sum }}
         spec:
           restartPolicy: {{ .Values.restartPolicy }}
+          {{- with .Values.priorityClassName }}
+          priorityClassName: {{ . | quote }}
+          {{- end }}
           {{- with .Values.imagePullSecrets }}
           imagePullSecrets:
             {{- toYaml . | nindent 12 }}

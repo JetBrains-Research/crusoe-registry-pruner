@@ -68,6 +68,7 @@ func NewClient(
 	retryableHTTPClient.RetryMax = 4
 	retryableHTTPClient.CheckRetry = checkRetry
 	retryableHTTPClient.ErrorHandler = retryablehttp.PassthroughErrorHandler
+	retryableHTTPClient.HTTPClient.Timeout = cfg.Pruner.RequestTimeout
 	retryableHTTPClient.HTTPClient.Transport = auth.NewAuthenticatingTransport(
 		retryableHTTPClient.HTTPClient.Transport,
 		string(cfg.AccessKey),

@@ -14,6 +14,7 @@ type Log struct {
 }
 
 type Pruner struct {
+	RequestTimeout   time.Duration `env:"REQUEST_TIMEOUT" envDefault:"1m"`
 	Timeout          time.Duration `env:"TIMEOUT" envDefault:"30m"`
 	MaxAge           time.Duration `env:"MAX_AGE" envDefault:"720h"`
 	AgeFrom          AgeFrom       `env:"AGE_FROM" envDefault:"pushed"`

@@ -26,13 +26,16 @@ data:
   {{- if .maxAge }}
   MAX_AGE: {{ .maxAge | quote }}
   {{- end }}
+  {{- if .pruneNeverPulled }}
+  PRUNE_NEVER_PULLED: {{ .pruneNeverPulled | quote }}
+  {{- end }}
+  {{- if .requestTimeout }}
+  REQUEST_TIMEOUT: {{ .requestTimeout | quote }}
+  {{- end }}
   {{- if .tagState }}
   TAG_STATE: {{ .tagState | quote }}
   {{- end }}
   {{- if .timeout }}
   TIMEOUT: {{ .timeout | quote }}
-  {{- end }}
-  {{- if .pruneNeverPulled }}
-  PRUNE_NEVER_PULLED: {{ .pruneNeverPulled | quote }}
   {{- end }}
   {{- end }}

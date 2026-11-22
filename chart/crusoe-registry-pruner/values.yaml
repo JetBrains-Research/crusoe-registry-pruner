@@ -4,9 +4,10 @@ config:
   dryRun: false
   keepTagPrefixes: []
   maxAge: ""
+  pruneNeverPulled: false
+  requestTimeout: ""
   tagState: ""
   timeout: ""
-  pruneNeverPulled: false
 
 concurrencyPolicy: "Forbid"
 extraEnv: []

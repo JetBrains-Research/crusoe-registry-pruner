@@ -140,17 +140,19 @@ CRUSOE_PRUNER_DELETE_IMAGES=true
 
 ## Local development
 
-Prerequisites: Go 1.27 or later and [`pre-commit`](https://pre-commit.com), which is required.
-[`golangci-lint`](https://golangci-lint.run) v2 is optional for running the linters by hand,
+Prerequisites: Go 1.27 or later, [`just`](https://just.systems) 1.55 or later,
+and [`pre-commit`](https://pre-commit.com), which is required.
+[`golangci-lint`](https://golangci-lint.run) v2 is needed for `just lint` and `just format`,
 as the `pre-commit` hooks build their own copy. Docker only if you work with the image,
 `helm` and `kubectl` only if you work with the chart.
 
 ```sh
 git clone https://github.com/jetbrains-research/crusoe-registry-pruner
 cd crusoe-registry-pruner
-go mod download
-pre-commit install
+just setup
 ```
+
+Run `just` on its own to list every recipe.
 
 Configuration is environment-only, so local runs read from a `.env` file you create yourself:
 
@@ -159,7 +161,6 @@ CRUSOE_PROJECT_ID=...
 CRUSOE_ACCESS_KEY=...
 CRUSOE_SECRET_KEY=...
 
-CRUSOE_PRUNER_DRY_RUN=true
 CRUSOE_PRUNER_LOG_FORMAT=text
 CRUSOE_PRUNER_LOG_LEVEL=debug
 CRUSOE_PRUNER_MAX_AGE=720h
@@ -168,45 +169,71 @@ CRUSOE_PRUNER_MAX_AGE=720h
 Run it:
 
 ```sh
-export $(grep -v '^#' .env | xargs)
-go run .
+just run        # dry run
+just run false  # deletes for real
 ```
+
+`just run` loads `.env` and sets `CRUSOE_PRUNER_DRY_RUN` from its argument,
+so any `DRY_RUN` value in `.env` is ignored.
 
 The `pre-commit` hooks format the code and lint it with [`golangci-lint`](https://golangci-lint.run),
 using the configuration in `.golangci.yaml`. To run them against the whole repository:
 
 ```sh
-pre-commit run --all-files
+just hook
 ```
 
 Checks before pushing:
 
 ```sh
-golangci-lint fmt --diff
-golangci-lint run
-go test ./...
-helm lint chart/crusoe-registry-pruner
+just lint
+just format
+just vet
+just test
+just lock
+```
+
+`just lint` and `just format` rewrite files in place.
+`just test` takes an optional package pattern and extra `go test` flags,
+for example `just test ./internal/config/... -v`.
+
+Dependencies:
+
+```sh
+just upgrade
+just tidy
 ```
 
 ### Building
 
 ```sh
-go build ./...
+just binary # writes bin/crusoe-registry-pruner
+just build  # container image
 ```
 
-Container image. Multi-stage, static binary on distroless:
+Both stamp the version from `git describe`.
+The image is a static binary on distroless.
+To pass extra arguments during `docker build`:
 
 ```sh
-docker build \
-    --build-arg VERSION="$(git describe --tags --always --dirty)" \
-    --tag ghcr.io/jetbrains-research/crusoe-registry-pruner \
-    .
+just build --platform linux/arm64
 ```
+
+To render the chart from source, pass extra arguments to `helm template`:
+
+```sh
+just template --set image.tag=`git describe --tags --always --dirty`
+```
+
+The chart in the repository only gets its real version on release,
+so set `image.tag` when rendering it from source.
 
 ## Deploying the Helm chart
 
-The chart lives in `chart/crusoe-registry-pruner` and renders
-a `CronJob` plus a `ConfigMap` holding the `CRUSOE_PRUNER_*` settings.
+Every release publishes the chart to GHCR as an OCI artifact at
+`oci://ghcr.io/jetbrains-research/charts/crusoe-registry-pruner`.
+The chart version is the release tag without the `v`, so release `v0.3.2` ships chart `0.3.2`.
+It renders a `CronJob` plus a `ConfigMap` holding the `CRUSOE_PRUNER_*` settings.
 It does not manage credentials. You create the `Secret` yourself.
 
 ### Create the credentials `Secret`
@@ -240,10 +267,6 @@ If your organization can mint restricted keys, use one here.
 ### Write a values file
 
 ```yaml
-image:
-  repository: ghcr.io/jetbrains-research/crusoe-registry-pruner
-  tag: v0.1.0
-
 schedule: "0 3 * * *" # 03:00 daily (cluster timezone)
 secretName: crusoe-secrets
 
@@ -266,21 +289,30 @@ Empty strings and `false` under `config` are left out of the `ConfigMap` entirel
 so the binary's own defaults apply.
 Set only what you want to override.
 
-Set `image.tag` explicitly. The chart falls back to `v{{ .Chart.AppVersion }}`.
+Leave `image.tag` unset. Each chart version defaults to the image from the same release.
+
+To see every value with its default:
+
+```sh
+helm show values oci://ghcr.io/jetbrains-research/charts/crusoe-registry-pruner --version 0.3.2
+```
 
 ### Install
 
 ```sh
-helm upgrade --install crusoe-registry-pruner chart/crusoe-registry-pruner \
+helm upgrade --install crusoe-registry-pruner oci://ghcr.io/jetbrains-research/charts/crusoe-registry-pruner \
+  --version 0.3.2 \
   --namespace crusoe-system \
   --values values.prod.yaml \
   --create-namespace
 ```
 
+Without `--version`, Helm installs the latest release.
 Render without applying to check the output first:
 
 ```sh
-helm template crusoe-registry-pruner chart/crusoe-registry-pruner \
+helm template crusoe-registry-pruner oci://ghcr.io/jetbrains-research/charts/crusoe-registry-pruner \
+  --version 0.3.2 \
   --namespace crusoe-system \
   --values values.prod.yaml
 ```
@@ -306,7 +338,7 @@ kubectl logs -n crusoe-system -l app.kubernetes.io/name=crusoe-registry-pruner -
 | `schedule`                 | `"0 0 * * *"`                                        | `CronJob` schedule, in the cluster timezone.                                                                              |
 | `secretName`               | `"crusoe-secrets"`                                   | Existing `Secret` holding `CRUSOE_PROJECT_ID`, `CRUSOE_ACCESS_KEY` and `CRUSOE_SECRET_KEY`. The chart does not create it. |
 | `image.repository`         | `ghcr.io/jetbrains-research/crusoe-registry-pruner`  | Image repository.                                                                                                         |
-| `image.tag`                | `""`                                                 | Image tag. Falls back to `v{{ .Chart.AppVersion }}`.                                                                      |
+| `image.tag`                | `""`                                                 | Image tag. Falls back to `v{{ .Chart.AppVersion }}`, the image from the same release.                                     |
 | `image.pullPolicy`         | `IfNotPresent`                                       | Image pull policy.                                                                                                        |
 | `imagePullSecrets`         | `[]`                                                 | Pull secrets for a private registry.                                                                                      |
 | `concurrencyPolicy`        | `Forbid`                                             | Prevents overlapping runs.                                                                                                |

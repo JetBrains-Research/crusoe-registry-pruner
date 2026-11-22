@@ -1,9 +1,11 @@
 package pruner
 
 import (
+	"cmp"
 	"context"
 	"errors"
 	"log/slog"
+	"math"
 	"os/signal"
 	"syscall"
 	"time"
@@ -40,7 +42,8 @@ func Prune() error {
 
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
-	ctx, cancel := context.WithTimeoutCause(ctx, cfg.Pruner.Timeout, errTimeoutExceeded)
+	timeout := cmp.Or(cfg.Pruner.Timeout, time.Duration(math.MaxInt64))
+	ctx, cancel := context.WithTimeoutCause(ctx, timeout, errTimeoutExceeded)
 	defer cancel()
 
 	client, err := crusoe.NewClient(cfg, logger)

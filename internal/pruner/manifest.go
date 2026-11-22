@@ -1,10 +1,10 @@
-package utils
+package pruner
 
 import (
 	"strconv"
 )
 
-func ParseSizeBytes(size string) int64 {
+func parseSizeBytes(size string) int64 {
 	if size == "" {
 		return int64(0)
 	}

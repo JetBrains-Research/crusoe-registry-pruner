@@ -22,7 +22,7 @@ RUN --mount=type=cache,target=/go/pkg/mod \
     set -eu; \
     export GOOS="${TARGETOS}" GOARCH="${TARGETARCH}"; \
     go vet -v ./...; \
-    go build -ldflags="-w -s -X crusoe-registry-pruner/internal/crusoe/utils.Version=${VERSION}" \
+    go build -ldflags="-w -s -X crusoe-registry-pruner/internal.Version=${VERSION}" \
         -trimpath \
         -o /go/bin/crusoe-registry-pruner;
 

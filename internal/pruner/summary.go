@@ -1,4 +1,4 @@
-package crusoe
+package pruner
 
 import (
 	"log/slog"

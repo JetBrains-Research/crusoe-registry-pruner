@@ -7,43 +7,6 @@ import (
 	"strings"
 )
 
-type AgeFrom string
-
-const (
-	Pushed   AgeFrom = "pushed"
-	Pulled   AgeFrom = "pulled"
-	Activity AgeFrom = "activity"
-)
-
-func (ageFrom *AgeFrom) UnmarshalText(text []byte) error {
-	normalized := bytes.ToLower(text)
-	switch value := AgeFrom(normalized); value {
-	case Pushed, Pulled, Activity:
-		*ageFrom = value
-		return nil
-	default:
-		return fmt.Errorf("invalid age from %q: want %q, %q or %q", value, Pushed, Pulled, Activity)
-	}
-}
-
-type Format string
-
-const (
-	JSON Format = "json"
-	Text Format = "text"
-)
-
-func (format *Format) UnmarshalText(text []byte) error {
-	normalized := bytes.ToLower(text)
-	switch value := Format(normalized); value {
-	case JSON, Text:
-		*format = value
-		return nil
-	default:
-		return fmt.Errorf("invalid log format %q: want %q or %q", value, JSON, Text)
-	}
-}
-
 type TagState string
 
 const (

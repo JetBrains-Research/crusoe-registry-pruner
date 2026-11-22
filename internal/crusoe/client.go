@@ -15,8 +15,8 @@ import (
 	"github.com/crusoecloud/client-go/swagger/v1"
 	"github.com/hashicorp/go-retryablehttp"
 
-	"crusoe-registry-pruner/internal/crusoe/config"
-	"crusoe-registry-pruner/internal/crusoe/utils"
+	"crusoe-registry-pruner/internal"
+	"crusoe-registry-pruner/internal/config"
 )
 
 const (
@@ -47,10 +47,10 @@ type Client interface {
 }
 
 type client struct {
-	apiClient *swagger.APIClient
-	logger    *slog.Logger
 	dryRun    bool
 	project   string
+	logger    *slog.Logger
+	apiClient *swagger.APIClient
 }
 
 func NewClient(
@@ -75,7 +75,7 @@ func NewClient(
 	)
 
 	apiClientConfig := swagger.NewConfiguration()
-	apiClientConfig.UserAgent = "crusoe-registry-pruner/" + utils.Version
+	apiClientConfig.UserAgent = internal.Project + "/" + internal.Version
 	apiClientConfig.HTTPClient = retryableHTTPClient.StandardClient()
 
 	return &client{

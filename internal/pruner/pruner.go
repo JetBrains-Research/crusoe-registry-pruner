@@ -1,22 +1,24 @@
-package crusoe
+package pruner
 
 import (
 	"context"
 	"errors"
 	"log/slog"
-	"os"
 	"os/signal"
-	"runtime/debug"
 	"syscall"
 	"time"
 
-	"crusoe-registry-pruner/internal/crusoe/config"
-	"crusoe-registry-pruner/internal/crusoe/logging"
-	"crusoe-registry-pruner/internal/crusoe/policy"
-	"crusoe-registry-pruner/internal/crusoe/utils"
+	"crusoe-registry-pruner/internal/config"
+	"crusoe-registry-pruner/internal/crusoe"
+	"crusoe-registry-pruner/internal/logging"
 )
 
-func PruneCcr() error {
+var (
+	errCleanupFailures = errors.New("cleanup had failures")
+	errTimeoutExceeded = errors.New("timeout exceeded")
+)
+
+func Prune() error {
 	start := time.Now()
 	cfg, err := config.Load()
 	if err != nil {
@@ -27,7 +29,8 @@ func PruneCcr() error {
 	if err != nil {
 		return err
 	}
-	slog.SetDefault(logger)
+	logging.SetDefault(logger)
+	logging.LogBuildInformation()
 
 	summary := Summary{}
 	defer func() {
@@ -35,18 +38,14 @@ func PruneCcr() error {
 		slog.Info("finished cleanup", "summary", summary)
 	}()
 
-	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
-	ctx, cancel := context.WithTimeoutCause(ctx, cfg.Pruner.Timeout, errors.New("timeout exceeded"))
+	ctx, cancel := context.WithTimeoutCause(ctx, cfg.Pruner.Timeout, errTimeoutExceeded)
 	defer cancel()
 
-	client, err := NewClient(cfg, logger)
+	client, err := crusoe.NewClient(cfg, logger)
 	if err != nil {
 		return err
-	}
-
-	if build, ok := debug.ReadBuildInfo(); ok {
-		slog.Info("build info", "version", utils.Version, "go_version", build.GoVersion)
 	}
 
 	if cfg.Pruner.DryRun {
@@ -92,8 +91,8 @@ func PruneCcr() error {
 				}
 
 				summary.Analyzed.Manifests++
-				sizeBytes := utils.ParseSizeBytes(manifest.SizeBytes)
-				if policy.ShouldPrune(cfg.Pruner, manifest, start) {
+				sizeBytes := parseSizeBytes(manifest.SizeBytes)
+				if shouldPrune(cfg.Pruner, manifest, start) {
 					err := client.DeleteManifest(ctx, repository, image, manifest)
 					if err != nil {
 						slog.Warn("failed to delete manifest", "error", err)
@@ -119,7 +118,7 @@ func PruneCcr() error {
 	}
 
 	if summary.Failed.Total() > 0 {
-		return errors.New("cleanup had failures")
+		return errCleanupFailures
 	}
 
 	return nil

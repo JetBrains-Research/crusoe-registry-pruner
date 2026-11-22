@@ -1,4 +1,4 @@
-package policy
+package pruner
 
 import (
 	"slices"
@@ -7,10 +7,10 @@ import (
 
 	"github.com/crusoecloud/client-go/swagger/v1"
 
-	"crusoe-registry-pruner/internal/crusoe/config"
+	"crusoe-registry-pruner/internal/config"
 )
 
-func ShouldPrune(
+func shouldPrune(
 	pruner config.Pruner,
 	manifest swagger.Manifest,
 	now time.Time,

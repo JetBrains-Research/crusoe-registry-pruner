@@ -346,7 +346,7 @@ kubectl logs -n crusoe-system -l app.kubernetes.io/name=crusoe-registry-pruner -
 | `resources`                | 50m CPU and 32Mi memory requested, 64Mi memory limit.           | Container resources.                                                                                                      |
 | `securityContext`          | All capabilities dropped with non-root user and read-only root. | Container security context.                                                                                               |
 | `extraEnv`                 | `[]`                                                            | Extra `env` entries appended to the container.                                                                            |
-| `config.*`                 | See the table above                                             | Maps to `CRUSOE_PRUNER_*`. Empty and false values are omitted.                                                            |
+| `config.*`                 | See the table above.                                            | Maps to `CRUSOE_PRUNER_*`. Empty and false values are omitted.                                                            |
 | `log.*`                    | See the table above.                                            | Maps to `CRUSOE_PRUNER_LOG_*`. Always emitted.                                                                            |
 
 ## License

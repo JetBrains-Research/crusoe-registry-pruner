@@ -1,3 +1,4 @@
+affinity: {}
 config:
   ageFrom: ""
   deleteImages: false
@@ -28,6 +29,7 @@ log:
   level: "info"
   source: false
 
+nodeSelector: {}
 priorityClassName: ""
 
 resources:
@@ -49,3 +51,5 @@ securityContext:
   runAsNonRoot: true
   seccompProfile:
     type: RuntimeDefault
+
+tolerations: []

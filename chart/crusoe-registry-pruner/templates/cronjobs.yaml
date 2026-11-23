@@ -17,12 +17,24 @@ spec:
           annotations:
             checksum/config: {{ include (print $.Template.BasePath "/configmaps.yaml") . | sha256sum }}
         spec:
-          restartPolicy: {{ .Values.restartPolicy }}
-          {{- with .Values.priorityClassName }}
-          priorityClassName: {{ . | quote }}
+          {{- with .Values.affinity }}
+          affinity:
+            {{- toYaml . | nindent 12 }}
           {{- end }}
           {{- with .Values.imagePullSecrets }}
           imagePullSecrets:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.nodeSelector }}
+          nodeSelector:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.priorityClassName }}
+          priorityClassName: {{ . | quote }}
+          {{- end }}
+          restartPolicy: {{ .Values.restartPolicy }}
+          {{- with .Values.tolerations }}
+          tolerations:
             {{- toYaml . | nindent 12 }}
           {{- end }}
           containers:

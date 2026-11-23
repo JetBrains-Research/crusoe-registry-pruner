@@ -233,7 +233,6 @@ so set `image.tag` when rendering it from source.
 Every release publishes the chart to GHCR as an OCI artifact at
 `oci://ghcr.io/jetbrains-research/charts/crusoe-registry-pruner`.
 The chart version is the release tag without the `v`, so release `v0.3.2` ships chart `0.3.2`.
-It renders a `CronJob` plus a `ConfigMap` holding the `CRUSOE_PRUNER_*` settings.
 It does not manage credentials. You create the `Secret` yourself.
 
 ### Create the credentials `Secret`
@@ -268,10 +267,9 @@ If your organization can mint restricted keys, use one here.
 
 ```yaml
 schedule: "0 3 * * *" # 03:00 daily (cluster timezone)
-secretName: crusoe-secrets
 
 config:
-  maxAge: "720h"
+  maxAge: "336h"
   ageFrom: activity
   tagState: untagged
   keepTagPrefixes:
@@ -279,10 +277,6 @@ config:
     - release-
   deleteImages: true
   dryRun: true # flip to false once the logs look right
-
-log:
-  level: info
-  format: json
 ```
 
 Empty strings and `false` under `config` are left out of the `ConfigMap` entirely, so the binary's own defaults apply.
@@ -333,24 +327,24 @@ kubectl logs -n crusoe-system -l app.kubernetes.io/name=crusoe-registry-pruner -
 
 ### Chart values
 
-| Value                      | Default                                              | Description                                                                                                               |
-|----------------------------|------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------|
-| `schedule`                 | `"0 0 * * *"`                                        | `CronJob` schedule, in the cluster timezone.                                                                              |
-| `secretName`               | `"crusoe-secrets"`                                   | Existing `Secret` holding `CRUSOE_PROJECT_ID`, `CRUSOE_ACCESS_KEY` and `CRUSOE_SECRET_KEY`. The chart does not create it. |
-| `image.repository`         | `ghcr.io/jetbrains-research/crusoe-registry-pruner`  | Image repository.                                                                                                         |
-| `image.tag`                | `""`                                                 | Image tag. Falls back to `v{{ .Chart.AppVersion }}`, the image from the same release.                                     |
-| `image.pullPolicy`         | `IfNotPresent`                                       | Image pull policy.                                                                                                        |
-| `imagePullSecrets`         | `[]`                                                 | Pull secrets for a private registry.                                                                                      |
-| `concurrencyPolicy`        | `Forbid`                                             | Prevents overlapping runs.                                                                                                |
-| `restartPolicy`            | `Never`                                              | Pod restart policy.                                                                                                       |
-| `priorityClassName`        | default priority or `0`                              | Pod scheduling priority.                                                                                                  |
-| `historyLimits.successful` | `3`                                                  | Number of succeeded `Job` resources to keep after a run finishes.                                                         |
-| `historyLimits.failed`     | `3`                                                  | Number of failed `Job` resources to keep after a run finishes.                                                            |
-| `resources`                | 50m CPU and 32Mi memory requested, 64Mi memory limit | Container resources.                                                                                                      |
-| `securityContext`          | `runAsNonRoot`, all capabilities dropped             | Container security context.                                                                                               |
-| `extraEnv`                 | `[]`                                                 | Extra `env` entries appended to the container.                                                                            |
-| `config.*`                 | see the table above                                  | Maps to `CRUSOE_PRUNER_*`. Empty and false values are omitted.                                                            |
-| `log.*`                    | see the table above                                  | Maps to `CRUSOE_PRUNER_LOG_*`. Always emitted.                                                                            |
+| Value                      | Default                                                         | Description                                                                                                               |
+|----------------------------|-----------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------|
+| `schedule`                 | `"0 0 * * *"`                                                   | `CronJob` schedule, in the cluster timezone.                                                                              |
+| `secretName`               | `"crusoe-secrets"`                                              | Existing `Secret` holding `CRUSOE_PROJECT_ID`, `CRUSOE_ACCESS_KEY` and `CRUSOE_SECRET_KEY`. The chart does not create it. |
+| `image.repository`         | `ghcr.io/jetbrains-research/crusoe-registry-pruner`             | Image repository.                                                                                                         |
+| `image.tag`                | `""`                                                            | Image tag. Falls back to `v{{ .Chart.AppVersion }}`, the image from the same release.                                     |
+| `image.pullPolicy`         | `IfNotPresent`                                                  | Image pull policy.                                                                                                        |
+| `imagePullSecrets`         | `[]`                                                            | Pull secrets for a private registry.                                                                                      |
+| `concurrencyPolicy`        | `Forbid`                                                        | Prevents overlapping runs.                                                                                                |
+| `restartPolicy`            | `Never`                                                         | Pod restart policy.                                                                                                       |
+| `priorityClassName`        | Default priority or `0`.                                        | Pod scheduling priority.                                                                                                  |
+| `historyLimits.successful` | `3`                                                             | Number of succeeded `Job` resources to keep after a run finishes.                                                         |
+| `historyLimits.failed`     | `3`                                                             | Number of failed `Job` resources to keep after a run finishes.                                                            |
+| `resources`                | 50m CPU and 32Mi memory requested, 64Mi memory limit.           | Container resources.                                                                                                      |
+| `securityContext`          | All capabilities dropped with non-root user and read-only root. | Container security context.                                                                                               |
+| `extraEnv`                 | `[]`                                                            | Extra `env` entries appended to the container.                                                                            |
+| `config.*`                 | See the table above                                             | Maps to `CRUSOE_PRUNER_*`. Empty and false values are omitted.                                                            |
+| `log.*`                    | See the table above.                                            | Maps to `CRUSOE_PRUNER_LOG_*`. Always emitted.                                                                            |
 
 ## License
 

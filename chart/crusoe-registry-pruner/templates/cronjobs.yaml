@@ -11,11 +11,16 @@ spec:
   failedJobsHistoryLimit: {{ .Values.historyLimits.failed }}
   schedule: {{ .Values.schedule }}
   jobTemplate:
+    metadata:
+      labels:
+        {{- include "crusoe-registry-pruner.labels" . | nindent 8 }}
     spec:
       template:
         metadata:
           annotations:
             checksum/config: {{ include (print $.Template.BasePath "/configmaps.yaml") . | sha256sum }}
+          labels:
+            {{- include "crusoe-registry-pruner.labels" . | nindent 12 }}
         spec:
           {{- with .Values.affinity }}
           affinity:

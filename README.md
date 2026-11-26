@@ -1,5 +1,7 @@
 # Crusoe Registry Pruner
 
+[![JetBrains Research](https://jb.gg/badges/research.svg)](https://github.com/JetBrains#jetbrains-on-github)
+
 A single-shot Go job that deletes stale manifests from [Crusoe Container Registry][ccr] (CCR).
 It is meant to run as a Kubernetes `CronJob`.
 
@@ -348,6 +350,10 @@ kubectl logs -n crusoe-system -l app.kubernetes.io/name=crusoe-registry-pruner -
 | `extraEnv`                 | `[]`                                                            | Extra `env` entries appended to the container.                                                                            |
 | `config.*`                 | See the table above.                                            | Maps to `CRUSOE_PRUNER_*`. Empty and false values are omitted.                                                            |
 | `log.*`                    | See the table above.                                            | Maps to `CRUSOE_PRUNER_LOG_*`. Always emitted.                                                                            |
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md). Report vulnerabilities as described in [SECURITY.md](SECURITY.md).
 
 ## License
 
